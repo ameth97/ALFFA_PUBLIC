@@ -1,20 +1,20 @@
 #!/bin/bash
 
 # initialization PATH
-. ./kaldi-scripts/00_init_paths.sh || { echo -e "\n00_init_paths.sh expected.\n"; exit; }
+sudo bash kaldi-scripts/00_init_paths.sh || { echo -e "\n00_init_paths.sh expected.\n"; exit; }
 
 
 ##### DATA PREPARATION #####
 # Create symbolic links used by Kaldi
-./kaldi-scripts/01_init_symlink.sh
+sudo bash kaldi-scripts/01_init_symlink.sh
 # Create and prepare dict/ directory
-./kaldi-scripts/02_lexicon.sh
+sudo bash kaldi-scripts/02_lexicon.sh
 # Create and prepare lang/ directory
-utils/prepare_lang.sh data/local/dict "<UNK>" data/local/lang data/lang
+sudo utils/prepare_lang.sh data/local/dict "<UNK>" data/local/lang data/lang
 # Prepare grammar from language model
-./kaldi-scripts/03_lm_preparation.sh
+sudo bash kaldi-scripts/03_lm_preparation.sh
 # Prepare data
-./kaldi-scripts/04_data_prep.sh
+sudo kaldi-scripts/04_data_prep.sh
 # Compute MFCC
 echo "compute mfcc for train dev test..."
 for dir in "train" "dev" "test"
