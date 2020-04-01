@@ -4,27 +4,7 @@
 . ./kaldi-scripts/00_init_paths.sh || { echo -e "\n00_init_paths.sh expected.\n"; exit; }
 
 
-##### DATA PREPARATION #####
-# Create symbolic links used by Kaldi
-bash kaldi-scripts/01_init_symlink.sh
-# Create and prepare dict/ directory
-bash kaldi-scripts/02_lexicon.sh
-# Create and prepare lang/ directory
-utils/prepare_lang.sh data/local/dict "<UNK>" data/local/lang data/lang
-# Prepare grammar from language model
-bash kaldi-scripts/03_lm_preparation.sh
-# Prepare data
-bash kaldi-scripts/04_data_prep.sh
-# Compute MFCC
-echo "compute mfcc for train dev test..."
-for dir in "train" "dev" "test"
-do
-  steps/make_mfcc.sh --nj 4 data/$dir data/exp/make_mfcc/$dir data/$dir/mfcc
-  steps/compute_cmvn_stats.sh data/$dir data/exp/make_mfcc/$dir data/$dir/mfcc
-done
-echo -e "compute mfcc done.\n"
-
-
+##### DATA PREPARAT
 ##### ASR BUILDING #####
 # initialization commands
 . ./cmd.sh || { echo -e "\n cmd.sh expected.\n"; exit; }
@@ -47,17 +27,17 @@ stage=0 # resume training with --stage=N
    # Store fMLLR features, so we can train on them easily,
    # dev
    dir=$data_fmllr/dev
-   steps/nnet/make_fmllr_feats.sh --nj 2 --cmd "$train_cmd" \
+   steps/nnet/make_fmllr_feats.sh --nj 2 --cmd run.pl \
       --transform-dir $gmmdir/decode_dev \
       $dir data/dev $gmmdir $dir/log $dir/data || exit 1
    # test
    dir=$data_fmllr/test
-   steps/nnet/make_fmllr_feats.sh --nj 2 --cmd "$train_cmd" \
+   steps/nnet/make_fmllr_feats.sh --nj 2 --cmd run.pl \
       --transform-dir $gmmdir/decode_test \
       $dir data/test $gmmdir $dir/log $dir/data || exit 1
    # train
    dir=$data_fmllr/train
-   steps/nnet/make_fmllr_feats.sh --nj 14 --cmd "$train_cmd" \
+   steps/nnet/make_fmllr_feats.sh --nj 14 --cmd run.pl \
       --transform-dir ${gmmdir}_ali \
       $dir data/train $gmmdir $dir/log $dir/data || exit 1
    # split the data : 90% train 10% cross-validation (held-out)
@@ -71,7 +51,7 @@ echo
  if [ $stage -le 1 ]; then
    # Pre-train DBN, i.e. a stack of RBMs (small database, smaller DNN)
    dir=exp/system1/dnn4b_pretrain-dbn
-   (tail --pid=$$ -F $dir/log/pretrain_dbn.log 2>/dev/null)& # forward log
+   (tail --pid=$$ -F $dir/log/pretrain_dbn.log 2>/dev/null) && # forward log
    $cuda_cmd $dir/log/pretrain_dbn.log \
       steps/nnet/pretrain_dbn.sh --hid-dim 1024 --rbm-iter 14 $data_fmllr/train $dir || exit 1;
  fi
@@ -82,7 +62,7 @@ echo
    ali=${gmmdir}_ali
    feature_transform=exp/system1/dnn4b_pretrain-dbn/final.feature_transform
    dbn=exp/system1/dnn4b_pretrain-dbn/2.dbn
- (tail --pid=$$ -F $dir/log/train_nnet.log 2>/dev/null)& # forward log
+ (tail --pid=$$ -F $dir/log/train_nnet.log 2>/dev/null) && # forward log
    # Train
    $cuda_cmd $dir/log/train_nnet.log \
    $dir/log/train_nnet.log \ 
