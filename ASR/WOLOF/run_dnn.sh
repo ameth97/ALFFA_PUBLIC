@@ -47,7 +47,7 @@ fi
 echo
  echo "===== DNN DATA TRAINING ====="
  echo
-$cuda_cmd=run.pl
+cuda_cmd=run.pl
 echo $cuda_cmd
  # Training
  if [ $stage -le 1 ]; then
