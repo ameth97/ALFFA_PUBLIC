@@ -47,11 +47,12 @@ fi
 echo
  echo "===== DNN DATA TRAINING ====="
  echo
+echo $cuda_cmd
  # Training
  if [ $stage -le 1 ]; then
    # Pre-train DBN, i.e. a stack of RBMs (small database, smaller DNN)
    dir=exp/system1/dnn4b_pretrain-dbn
-   (tail --pid=$$ -F $dir/log/pretrain_dbn.log 2>/dev/null) && # forward log
+   (tail --pid=$$ -F $dir/log/pretrain_dbn.log 2>/dev/null) & # forward log
    $cuda_cmd $dir/log/pretrain_dbn.log \
       steps/nnet/pretrain_dbn.sh --hid-dim 1024 --rbm-iter 14 $data_fmllr/train $dir || exit 1;
  fi
@@ -62,7 +63,7 @@ echo
    ali=${gmmdir}_ali
    feature_transform=exp/system1/dnn4b_pretrain-dbn/final.feature_transform
    dbn=exp/system1/dnn4b_pretrain-dbn/2.dbn
- (tail --pid=$$ -F $dir/log/train_nnet.log 2>/dev/null) && # forward log
+ (tail --pid=$$ -F $dir/log/train_nnet.log 2>/dev/null) & # forward log
    # Train
    $cuda_cmd $dir/log/train_nnet.log \
    $dir/log/train_nnet.log \ 
